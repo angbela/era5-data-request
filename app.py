@@ -1,41 +1,46 @@
 import streamlit as st
 import cdsapi
 import math
-import os
+import threading
+import time
 
 # =========================
 # ERA5 grid snapping logic
-# (3-decimal resolution)
 # =========================
 def get_ecmwf_area(lat, lon, grid_size=0.001):
     lat_floor = math.floor(lat * 1000) / 1000
-    lat_south = lat_floor
-    lat_north = lat_floor + grid_size
-
     lon_floor = math.floor(lon * 1000) / 1000
-    lon_west = lon_floor
-    lon_east = lon_floor + grid_size
 
     return [
-        round(lat_north, 3),  # North
-        round(lon_west, 3),   # West
-        round(lat_south, 3),  # South
-        round(lon_east, 3),   # East
+        round(lat_floor + grid_size, 3),  # North
+        round(lon_floor, 3),              # West
+        round(lat_floor, 3),              # South
+        round(lon_floor + grid_size, 3),  # East
     ]
 
 # =========================
 # Streamlit UI
 # =========================
 st.set_page_config(layout="centered")
-st.title("ERA5 Point Downloader (Yearly – Manual Submit)")
+st.title("ERA5 Point Downloader (Yearly – Manual / Fire-and-Forget)")
 
 st.info(
-    "Identical to Colab behavior:\n"
+    "Colab-equivalent behavior:\n"
     "- ONE year per request\n"
+    "- netcdf4 format\n"
     "- ERA5 native grid point\n"
-    "- Manual submit\n"
-    "- 3-decimal snapped area"
+    "- Submit → break → click next year"
 )
+
+# =========================
+# Session state
+# =========================
+if "current_year" not in st.session_state:
+    st.session_state.current_year = None
+if "locked" not in st.session_state:
+    st.session_state.locked = False
+if "prev_start_year" not in st.session_state:
+    st.session_state.prev_start_year = None
 
 # =========================
 # Inputs
@@ -51,8 +56,16 @@ st.subheader("📍 Location")
 lat = st.number_input("Latitude", value=-8.405187, format="%.6f")
 lon = st.number_input("Longitude", value=119.660916, format="%.6f")
 
-st.subheader("📅 Year")
-year = st.number_input("Year to download", value=2013, step=1)
+st.subheader("📅 Year range")
+start_year = st.number_input("Start year", value=2013, step=1)
+end_year = st.number_input("End year", value=2022, step=1)
+
+# =========================
+# Sync current_year with start_year
+# =========================
+if st.session_state.prev_start_year != start_year:
+    st.session_state.current_year = start_year
+    st.session_state.prev_start_year = start_year
 
 # =========================
 # Variables (UNCHANGED)
@@ -72,15 +85,16 @@ for v in VARIABLES:
         selected_vars.append(v)
 
 # =========================
-# Output folder
+# Completion check
 # =========================
-OUTPUT_DIR = "era5_output"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+all_done = st.session_state.current_year > end_year-1
 
 # =========================
-# Submit logic
+# CDS submission
 # =========================
-def submit_year(c, area, year, variables):
+def submit_year_blocking(area, year, variables, url, key):
+    c = cdsapi.Client(url=url, key=key, quiet=False)
+
     request = {
         "product_type": "reanalysis",
         "variable": variables,
@@ -88,22 +102,24 @@ def submit_year(c, area, year, variables):
         "month": [f"{m:02d}" for m in range(1, 13)],
         "day": [f"{d:02d}" for d in range(1, 32)],
         "time": [f"{h:02d}:00" for h in range(24)],
-        "area": area,   # N, W, S, E
+        "area": area,
         "format": "netcdf4",
     }
 
-    outfile = f"{OUTPUT_DIR}/era5_{year}.nc"
-
+    # Fire-and-forget: launch request only
     c.retrieve(
         "reanalysis-era5-single-levels",
         request,
-        outfile,
+        "era5_request_placeholder.nc",
     )
 
 # =========================
 # Submit button
 # =========================
-if st.button("🚀 Submit THIS YEAR"):
+button_disabled = st.session_state.locked or all_done
+
+if st.button("🚀 Submit CURRENT YEAR", disabled=button_disabled):
+
     if not cds_key.strip():
         st.error("CDS API key is required")
         st.stop()
@@ -112,22 +128,35 @@ if st.button("🚀 Submit THIS YEAR"):
         st.error("Select at least one variable")
         st.stop()
 
+    year = st.session_state.current_year
     area = get_ecmwf_area(lat, lon)
+
     st.write("ERA5 snapped area [N, W, S, E]:", area)
-
-    c = cdsapi.Client(
-        url=cds_url,
-        key=cds_key,
-        quiet=False,
-    )
-
     st.warning(f"Submitting ERA5 request for year {year}")
-    st.warning("Do NOT click again until finished")
 
-    try:
-        submit_year(c, area, year, selected_vars)
-    except Exception as e:
-        st.error(f"Submission failed: {e}")
-        st.stop()
+    st.session_state.locked = True
 
-    st.success(f"ERA5 {year} download completed")
+    threading.Thread(
+        target=submit_year_blocking,
+        args=(area, year, selected_vars, cds_url, cds_key),
+        daemon=True,
+    ).start()
+
+    time.sleep(6)
+
+    st.success(f"✅ Request for {year} submitted to CDS")
+
+    st.session_state.current_year += 1
+    st.session_state.locked = False
+
+# =========================
+# Status
+# =========================
+st.markdown("---")
+
+if all_done:
+    st.success("🎉 All requested years have been submitted.")
+    st.write("✅ Last submitted year:", end_year)
+else:
+    st.write("🟢 Next year to submit:", st.session_state.current_year)
+
