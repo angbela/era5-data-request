@@ -2,3 +2,8 @@ streamlit
 cdsapi
 ecmwf-datastores-client
 requests
+xarray 
+netcdf4 
+scipy 
+numpy 
+pandas
