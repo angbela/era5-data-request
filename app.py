@@ -118,7 +118,7 @@ with tab1:
             "day":   [f"{d:02d}" for d in range(1, 32)],
             "time":  [f"{h:02d}:00" for h in range(24)],
             "area":  area,
-            "format": "netcdf4",
+            "data_format": "netcdf4",
         }
         c.retrieve("reanalysis-era5-single-levels", request, "era5_request_placeholder.nc")
 
@@ -309,3 +309,4 @@ with tab2:
     # ── Requirements reminder ──
     st.markdown("---")
     st.caption("Requirements for Module 2: `pip install xarray netcdf4 scipy numpy pandas`")
+
