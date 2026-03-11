@@ -62,11 +62,14 @@ with tab1:
     def get_ecmwf_area(lat, lon, grid_size=0.25):
         lat_grid = round(lat / grid_size) * grid_size
         lon_grid = round(lon / grid_size) * grid_size
+
+        buffer = grid_size  # expand box to guarantee ≥1 grid cell
+
         return [
-            round(lat_grid + grid_size/2, 3),  # North
-            round(lon_grid - grid_size/2, 3),  # West
-            round(lat_grid - grid_size/2, 3),  # South
-            round(lon_grid + grid_size/2, 3),  # East
+            round(lat_grid + grid_size, 3),  # North
+            round(lon_grid - grid_size, 3),  # West
+            round(lat_grid - grid_size, 3),  # South
+            round(lon_grid + grid_size, 3),  # East
         ]
     
     # ── Session state ──
@@ -309,6 +312,7 @@ with tab2:
     # ── Requirements reminder ──
     st.markdown("---")
     st.caption("Requirements for Module 2: `pip install xarray netcdf4 scipy numpy pandas`")
+
 
 
 
