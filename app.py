@@ -59,16 +59,17 @@ with tab1:
     )
 
     # ── ERA5 grid snapping ──
-    def get_ecmwf_area(lat, lon, grid_size=0.001):
-        lat_floor = math.floor(lat * 1000) / 1000
-        lon_floor = math.floor(lon * 1000) / 1000
-        return [
-            round(lat_floor + grid_size, 3),
-            round(lon_floor, 3),
-            round(lat_floor, 3),
-            round(lon_floor + grid_size, 3),
-        ]
+    def get_ecmwf_area(lat, lon, grid_size=0.25):
+    lat_grid = round(lat / grid_size) * grid_size
+    lon_grid = round(lon / grid_size) * grid_size
 
+    return [
+        round(lat_grid + grid_size/2, 3),  # North
+        round(lon_grid - grid_size/2, 3),  # West
+        round(lat_grid - grid_size/2, 3),  # South
+        round(lon_grid + grid_size/2, 3),  # East
+    ]
+    
     # ── Session state ──
     for key, default in [
         ("current_year", None),
@@ -309,4 +310,5 @@ with tab2:
     # ── Requirements reminder ──
     st.markdown("---")
     st.caption("Requirements for Module 2: `pip install xarray netcdf4 scipy numpy pandas`")
+
 
