@@ -59,19 +59,16 @@ with tab1:
     )
 
     # ── ERA5 grid snapping ──
-    def get_ecmwf_area(lat, lon, grid_size=0.25):
-        lat_grid = round(lat / grid_size) * grid_size
-        lon_grid = round(lon / grid_size) * grid_size
-
-        buffer = grid_size  # expand box to guarantee ≥1 grid cell
-
+    def get_ecmwf_area(lat, lon, grid_size=0.001):
+        lat_floor = math.floor(lat * 1000) / 1000
+        lon_floor = math.floor(lon * 1000) / 1000
         return [
-            round(lat_grid + grid_size, 3),  # North
-            round(lon_grid - grid_size, 3),  # West
-            round(lat_grid - grid_size, 3),  # South
-            round(lon_grid + grid_size, 3),  # East
+            round(lat_floor + grid_size, 3),
+            round(lon_floor, 3),
+            round(lat_floor, 3),
+            round(lon_floor + grid_size, 3),
         ]
-    
+
     # ── Session state ──
     for key, default in [
         ("current_year", None),
@@ -121,7 +118,7 @@ with tab1:
             "day":   [f"{d:02d}" for d in range(1, 32)],
             "time":  [f"{h:02d}:00" for h in range(24)],
             "area":  area,
-            "data_format": "netcdf4",
+            "format": "netcdf4",
         }
         c.retrieve("reanalysis-era5-single-levels", request, "era5_request_placeholder.nc")
 
@@ -182,6 +179,9 @@ with tab2:
         )
 
     if XARRAY_OK:
+        st.subheader("📍 Target coordinate")
+        target_lat = st.number_input("Latitude (for nearest grid point)", value=0.0, format="%.6f", key="m2_lat")
+        target_lon = st.number_input("Longitude (for nearest grid point)", value=0.0, format="%.6f", key="m2_lon")
         uploaded_files = st.file_uploader(
             "Upload ERA5 .nc file(s)",
             type=["nc"],
@@ -242,7 +242,15 @@ with tab2:
                 data_cols = [c for c in df.columns if c not in ("latitude", "longitude", "time", "valid_time", "expver")]
                 df_clean = df.dropna(subset=data_cols, how="all").copy()
 
-                # ── Round coordinates for readability ──
+                if "latitude" in df_clean.columns and "longitude" in df_clean.columns:
+                    lats = np.array(pd.unique(df_clean["latitude"].values), dtype=float)
+                    lons = np.array(pd.unique(df_clean["longitude"].values), dtype=float)
+                    if lats.size > 0 and lons.size > 0:
+                        nearest_lat = float(lats[np.abs(lats - target_lat).argmin()])
+                        nearest_lon = float(lons[np.abs(lons - target_lon).argmin()])
+                        df_clean = df_clean[(df_clean["latitude"] == nearest_lat) & (df_clean["longitude"] == nearest_lon)].copy()
+                        st.write(f"Nearest grid point used → latitude: {nearest_lat:.6f}, longitude: {nearest_lon:.6f}")
+
                 for col in ["latitude", "longitude"]:
                     if col in df_clean.columns:
                         df_clean[col] = df_clean[col].round(6)
@@ -312,7 +320,3 @@ with tab2:
     # ── Requirements reminder ──
     st.markdown("---")
     st.caption("Requirements for Module 2: `pip install xarray netcdf4 scipy numpy pandas`")
-
-
-
-
