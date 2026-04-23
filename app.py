@@ -59,7 +59,7 @@ with tab1:
     )
 
     # ── ERA5 grid snapping ──
-    def get_ecmwf_area(lat, lon, grid_size=0.05):
+    def get_ecmwf_area(lat, lon, grid_size=0.25):
         lat_floor = math.floor(lat * 1000) / 1000
         lon_floor = math.floor(lon * 1000) / 1000
         return [
