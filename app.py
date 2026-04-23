@@ -60,14 +60,14 @@ with tab1:
 
     # ── ERA5 grid snapping ──
     def get_ecmwf_area(lat, lon, grid_size=0.25):
-    lat_floor = math.floor(lat / grid_size) * grid_size
-    lon_floor = math.floor(lon / grid_size) * grid_size
-    return [
-        round(lat_floor + grid_size, 3),
-        round(lon_floor, 3),
-        round(lat_floor, 3),
-        round(lon_floor + grid_size, 3),
-    ]
+        lat_floor = math.floor(lat / grid_size) * grid_size
+        lon_floor = math.floor(lon / grid_size) * grid_size
+        return [
+            round(lat_floor + grid_size, 3),
+            round(lon_floor, 3),
+            round(lat_floor, 3),
+            round(lon_floor + grid_size, 3),
+        ]
 
     # ── Session state ──
     for key, default in [
