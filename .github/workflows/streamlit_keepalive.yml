@@ -28,7 +28,10 @@ jobs:
           const urls = [
             'https://ang-era5.streamlit.app/',
             'https://ang-2dbpp.streamlit.app/',
-            'https://ang-roseplot.streamlit.app/'
+            'https://ang-roseplot.streamlit.app/',
+            'https://ang-tide.streamlit.app/',
+            'https://cpm-test.streamlit.app/',
+            'https://ang-tshd.streamlit.app/'            
           ];
 
           (async () => {
