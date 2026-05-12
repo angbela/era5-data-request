@@ -31,7 +31,8 @@ jobs:
             'https://ang-roseplot.streamlit.app/',
             'https://ang-tide.streamlit.app/',
             'https://cpm-test.streamlit.app/',
-            'https://ang-tshd.streamlit.app/'            
+            'https://ang-tshd.streamlit.app/',
+            'https://ang-dredge.streamlit.app/'
           ];
 
           (async () => {
