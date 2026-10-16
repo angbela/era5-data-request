@@ -27,13 +27,19 @@ jobs:
 
           const urls = [
             'https://ang-era5.streamlit.app/',
-            'https://ang-2dbpp.streamlit.app/',
-            'https://ang-roseplot.streamlit.app/',
+            'https://ang-fetch.streamlit.app/',
+            'https://ang-wave.streamlit.app/',
             'https://ang-tide.streamlit.app/',
+            'https://ang-val.streamlit.app/',
+            'https://ang-2dbpp.streamlit.app/',
+            'https://ang-bw.streamlit.app/',
             'https://cpm-test.streamlit.app/',
+            'https://ang-roseplot.streamlit.app/',
+            'https://ang-dredge.streamlit.app/',
+            'https://ang-val2.streamlit.app/',
             'https://ang-tshd.streamlit.app/',
             'https://ang-mesh.streamlit.app/',
-            'https://ang-dredge.streamlit.app/'
+            'https://ang-circle-vertex.streamlit.app/'
           ];
 
           (async () => {
