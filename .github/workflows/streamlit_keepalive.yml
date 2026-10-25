@@ -39,7 +39,8 @@ jobs:
             'https://ang-val2.streamlit.app/',
             'https://ang-tshd.streamlit.app/',
             'https://ang-mesh.streamlit.app/',
-            'https://ang-circle-vertex.streamlit.app/'
+            'https://ang-circle-vertex.streamlit.app/',
+            'https://ang-trend.streamlit.app/'
           ];
 
           (async () => {
